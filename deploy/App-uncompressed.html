@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Story Hierarchy Depth</title>
+
+    <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                Ext.define('Niks.Apps.StoryDepth', {
+    extend: 'Rally.app.App',
+    componentCls: 'app',
+
+    items: [
+        {
+            xtype: 'container',
+            itemId: 'option_box',
+            layout: 'hbox'
+        }
+    ],
+
+    _getData: function(query) {
+        var me = this;
+        var totals = Ext.create('Deft.Deferred');
+        this._loadRecordCount('hierarchicalrequirement', Rally.data.wsapi.Filter.fromQueryString('('+query)+'>0)', 0).then({
+            success: function(result) {
+                    totals.resolve(result);
+            },
+            failure: function(result) {
+                console.log('Failed: ', result);
+                totals.reject(result);
+            }
+        });
+                return totals.promise;
+    },
+
+    _recurse: function(query) {
+        var me = this;
+        this._getData(query).then({
+            success: function(results) {
+                if (results !==0) {
+                    me.down('#option_box').html += '<p>' + query + ': ' + results + '</p>';
+                    me._recurse('Parent.'+query);
+                }
+            },
+            scope: me
+        })
+    },
+
+    launch: function() {
+        var qStr = 'Parent.Feature.ObjectID';
+        this._getData(qStr).then ({
+            success: function(){
+                console.log('Search complete');
+            },
+            failure: function(){
+                console.log('Search failed');
+            }
+
+        })
+    },
+
+    _loadRecordCount: function(model, filters, id){
+        var deferred = Ext.create('Deft.Deferred');
+        var me = this;
+        console.log("Starting load: model>>",model, 'filters>>', filters.toString());
+
+        Ext.create('Rally.data.wsapi.Store', {
+            model: model,
+            filters: filters,
+            limit: 1,
+            pageSize: 1
+        }).load({
+            callback : function(records, operation, successful) {
+                var result = {};
+                if (successful){
+                    console.log('result:', operation);
+                    result[id] = operation.resultSet.totalRecords || 0;
+                    deferred.resolve(result);
+                } else {
+                    console.log("Failed: ", operation);
+                    result[id] = 0;
+                    deferred.resolve(result);
+                    //deferred.reject("Couldn't Load: " + operation.error.errors.join('. '));
+                }
+            }
+        });
+        return deferred.promise;
+    }
+});
+
+
+            Rally.launchApp('Niks.Apps.StoryDepth', {
+                name:"Story Hierarchy Depth",
+                parentRepos:"",
+                version:"0.1.1"
+            });
+
+        });
+    </script>
+
+
+
+    <style type="text/css">
+        .app {
+  /* Add app styles here */
+}
+
+    </style>
+</head>
+<body>
+</body>
+</html>

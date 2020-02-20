@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Story Hierarchy Depth</title>
+
+    <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                Ext.define("Niks.Apps.StoryDepth",{extend:"Rally.app.App",componentCls:"app",items:[{xtype:"container",itemId:"option_box",layout:"hbox"}],_getData:function(e){var t=Ext.create("Deft.Deferred");return this._loadRecordCount("hierarchicalrequirement",Rally.data.wsapi.Filter.fromQueryString("("+e)+">0)",0).then({success:function(e){t.resolve(e)},failure:function(e){console.log("Failed: ",e),t.reject(e)}}),t.promise},_recurse:function(e){var t=this;this._getData(e).then({success:function(o){0!==o&&(t.down("#option_box").html+="<p>"+e+": "+o+"</p>",t._recurse("Parent."+e))},scope:t})},launch:function(){this._getData("Parent.Feature.ObjectID").then({success:function(){console.log("Search complete")},failure:function(){console.log("Search failed")}})},_loadRecordCount:function(e,t,o){var r=Ext.create("Deft.Deferred");return console.log("Starting load: model>>",e,"filters>>",t.toString()),Ext.create("Rally.data.wsapi.Store",{model:e,filters:t,limit:1,pageSize:1}).load({callback:function(e,t,n){var a={};n?(console.log("result:",t),a[o]=t.resultSet.totalRecords||0,r.resolve(a)):(console.log("Failed: ",t),a[o]=0,r.resolve(a))}}),r.promise}});
+
+            Rally.launchApp('Niks.Apps.StoryDepth', {
+                name:"Story Hierarchy Depth",
+                parentRepos:"",
+                version:"0.1.1"
+            });
+
+        });
+    </script>
+
+
+    <style type="text/css">
+        
+    </style>
+</head>
+<body>
+</body>
+</html>
