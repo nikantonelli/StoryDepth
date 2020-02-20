@@ -19,10 +19,11 @@
         }
     ],
 
+    html: '',
+
     _getData: function(query) {
-        var me = this;
         var totals = Ext.create('Deft.Deferred');
-        this._loadRecordCount('hierarchicalrequirement', Rally.data.wsapi.Filter.fromQueryString('('+query)+'>0)', 0).then({
+        this._loadRecordCount('hierarchicalrequirement', Rally.data.wsapi.Filter.fromQueryString('('+query+' >0)'), 'ans').then({
             success: function(result) {
                     totals.resolve(result);
             },
@@ -38,31 +39,29 @@
         var me = this;
         this._getData(query).then({
             success: function(results) {
-                if (results !==0) {
-                    me.down('#option_box').html += '<p>' + query + ': ' + results + '</p>';
+                if (results.ans !==0) {
+                    me.add( {
+                        xtype: 'container',
+                        html: 'Level: ' + query.match(/Parent/g).length + ' Count: ' + results.ans
+                    });
+
                     me._recurse('Parent.'+query);
                 }
             },
+            failure: function(result) {
+                console.log('Failed to get data: ', result)
+            },
             scope: me
-        })
+        });
     },
 
     launch: function() {
-        var qStr = 'Parent.Feature.ObjectID';
-        this._getData(qStr).then ({
-            success: function(){
-                console.log('Search complete');
-            },
-            failure: function(){
-                console.log('Search failed');
-            }
-
-        })
+        var qStr = 'Parent.PortfolioItem.ObjectID';
+        this._recurse(qStr);
     },
 
     _loadRecordCount: function(model, filters, id){
         var deferred = Ext.create('Deft.Deferred');
-        var me = this;
         console.log("Starting load: model>>",model, 'filters>>', filters.toString());
 
         Ext.create('Rally.data.wsapi.Store', {

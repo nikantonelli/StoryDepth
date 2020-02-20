@@ -13,7 +13,6 @@ Ext.define('Niks.Apps.StoryDepth', {
     html: '',
 
     _getData: function(query) {
-        var me = this;
         var totals = Ext.create('Deft.Deferred');
         this._loadRecordCount('hierarchicalrequirement', Rally.data.wsapi.Filter.fromQueryString('('+query+' >0)'), 'ans').then({
             success: function(result) {
@@ -41,10 +40,10 @@ Ext.define('Niks.Apps.StoryDepth', {
                 }
             },
             failure: function(result) {
-                debugger;
+                console.log('Failed to get data: ', result)
             },
             scope: me
-        })
+        });
     },
 
     launch: function() {
@@ -54,7 +53,6 @@ Ext.define('Niks.Apps.StoryDepth', {
 
     _loadRecordCount: function(model, filters, id){
         var deferred = Ext.create('Deft.Deferred');
-        var me = this;
         console.log("Starting load: model>>",model, 'filters>>', filters.toString());
 
         Ext.create('Rally.data.wsapi.Store', {
