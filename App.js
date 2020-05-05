@@ -38,9 +38,15 @@ Ext.define('Niks.Apps.StoryDepth', {
 
                     me._recurse('Parent.'+query);
                 }
+                else {
+                    me.add( {
+                        xtype: 'container',
+                        html: 'Level: ' + query.match(/Parent/g).length + ' has none '
+                    });
+                }
             },
             failure: function(result) {
-                console.log('Failed to get data: ', result)
+                console.log('Failed to get data: ', result);
             },
             scope: me
         });
